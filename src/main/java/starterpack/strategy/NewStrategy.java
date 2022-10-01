@@ -4,7 +4,6 @@ import starterpack.Config;
 import starterpack.game.*;
 import starterpack.util.Utility;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class NewStrategy implements Strategy {
@@ -54,20 +53,8 @@ public class NewStrategy implements Strategy {
             }
         }
         //if there are multiple killables kill the one that has most threat;
-        if (!killList.isEmpty()) {
-            int damage = 0;
-            int indexToKill = killList.get(0);
-            for (int i: killList) {
-                PlayerState enemy = gameState.getPlayerStateByIndex(i);
-                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
-                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
-                    if (damage < enemy.getStatSet().getDamage()) {
-                        damage = enemy.getStatSet().getDamage();
-                        indexToKill = i;
-                    }
-                }
-            }
-            return indexToKill;
+        if (findMostDangerousPlayer(killList, gameState, myPlayerIndex) != -1) {
+            return findMostDangerousPlayer(killList, gameState, myPlayerIndex);
         }
 
         //If cannot kill attack the one on control tile
@@ -80,20 +67,8 @@ public class NewStrategy implements Strategy {
             }
         }
         //If there are multiple on tile kill the one that has the most threat;
-        if (!onTileList.isEmpty()) {
-            int damage = 0;
-            int indexToKill = onTileList.get(0);
-            for (int i: onTileList) {
-                PlayerState enemy = gameState.getPlayerStateByIndex(i);
-                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
-                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
-                    if (damage < enemy.getStatSet().getDamage()) {
-                        damage = enemy.getStatSet().getDamage();
-                        indexToKill = i;
-                    }
-                }
-            }
-            return indexToKill;
+        if (findMostDangerousPlayer(onTileList, gameState, myPlayerIndex) != -1) {
+            return findMostDangerousPlayer(onTileList, gameState, myPlayerIndex);
         }
 
         //If cannot kill one attack the one that can attack me;
@@ -105,20 +80,8 @@ public class NewStrategy implements Strategy {
                 attackList.add(i);
             }
         }
-        if (!attackList.isEmpty()) {
-            int damage = 0;
-            int indexToKill = attackList.get(0);
-            for (int i: attackList) {
-                PlayerState enemy = gameState.getPlayerStateByIndex(i);
-                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
-                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
-                    if (damage < enemy.getStatSet().getDamage()) {
-                        damage = enemy.getStatSet().getDamage();
-                        indexToKill = i;
-                    }
-                }
-            }
-            return indexToKill;
+        if (findMostDangerousPlayer(attackList, gameState, myPlayerIndex) != -1) {
+            return findMostDangerousPlayer(attackList, gameState, myPlayerIndex);
         }
 
         //If cannot kill one attack the one with most damage;
@@ -133,6 +96,26 @@ public class NewStrategy implements Strategy {
             }
         }
         return result;
+    }
+
+    private int findMostDangerousPlayer(List<Integer> indexList, GameState gameState, int myPlayerIndex) {
+        if (!indexList.isEmpty()) {
+            int damage = 0;
+            int indexToKill = indexList.get(0);
+            for (int i: indexList) {
+                PlayerState enemy = gameState.getPlayerStateByIndex(i);
+                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
+                    if (damage < enemy.getStatSet().getDamage()) {
+                        damage = enemy.getStatSet().getDamage();
+                        indexToKill = i;
+                    }
+                }
+            }
+            return indexToKill;
+        } else {
+            return -1;
+        }
     }
 
     private boolean checkOnTile(GameState gameState, int index){
