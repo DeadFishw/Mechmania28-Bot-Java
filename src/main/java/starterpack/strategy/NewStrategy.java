@@ -11,6 +11,7 @@ import java.util.Map;
 
 public class NewStrategy implements Strategy {
     Map<Position, Integer> dangerMap = new HashMap<>();
+    GameState currentGameState;
     State currentState;
     int round = 0;
     Position currentPosition;
@@ -28,7 +29,12 @@ public class NewStrategy implements Strategy {
 
     @Override
     public Position moveActionDecision(GameState gameState, int myPlayerIndex) {
-        return null;
+        currentGameState = gameState;
+        updateDangerMap(gameState, myPlayerIndex);
+        updateState(gameState, myPlayerIndex);
+        Position destiny = null;//destiny position that varies according to state
+        return moveActionDecision(gameState.getPlayerStateByIndex(myPlayerIndex).getPosition(), destiny,
+                gameState.getPlayerStateByIndex(myPlayerIndex).getStatSet().getSpeed(), myPlayerIndex);
     }
 
     @Override
@@ -44,6 +50,39 @@ public class NewStrategy implements Strategy {
 
     public void updateState(GameState gameState, int myPlayerIndex) {
 
+    }
+
+    /**
+     * find the next place in map to go; avoid dangerous places; open for modification
+     * to avoid dangerous locations.
+     * @param currentPosition
+     * @param destiny
+     * @param speed
+     * @param myPlayerIndex
+     * @return position to go
+     */
+    private Position moveActionDecision(Position currentPosition, Position destiny, int speed, int myPlayerIndex) {
+        //if can move to destiny
+        if (Utility.manhattanDistance(currentPosition, destiny) <= speed ||
+                destiny == Utility.spawnPoints.get(myPlayerIndex)) {
+            return destiny;
+        }
+        int minDistance = 100;
+        Position movePosition = destiny;
+        for(int i = 0; i < Config.BOARD_SIZE; i++) {
+            for(int j = 0; j < Config.BOARD_SIZE; j++) {
+                Position position = new Position(i, j);
+                if (dangerMap.get(position) > currentGameState.getPlayerStateByIndex(myPlayerIndex).getHealth()) {
+                    continue;
+                }
+                if (speed >= Utility.manhattanDistance(currentPosition, position) &&
+                        minDistance > Utility.manhattanDistance(destiny, position)) {
+                    minDistance = Utility.manhattanDistance(destiny, position);
+                    movePosition = position;
+                }
+            }
+        }
+        return movePosition;
     }
 
     private void updateDangerMap(GameState gameState, int myPlayerIndex) {
