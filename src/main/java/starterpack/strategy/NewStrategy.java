@@ -4,10 +4,8 @@ import starterpack.Config;
 import starterpack.game.*;
 import starterpack.util.Utility;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class NewStrategy implements Strategy {
     Map<Position, Integer> dangerMap = new HashMap<>();
@@ -40,7 +38,42 @@ public class NewStrategy implements Strategy {
     @Override
     public int attackActionDecision(GameState gameState, int myPlayerIndex) {
         updateDangerMap(gameState, myPlayerIndex);
-        return 0;
+
+        //If can attack no one return
+        if (getAttactableEnemies(gameState, myPlayerIndex) == null) {
+            return 0;
+        }
+
+        //If can kill one then kill one
+        for (int i: getAttactableEnemies(gameState, myPlayerIndex)) {
+            PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+            PlayerState enemy = gameState.getPlayerStateByIndex(i);
+            if (myPlayer.getStatSet().getDamage() > enemy.getStatSet().getMaxHealth()) {
+                return i;
+            }
+        }
+
+        //If cannot kill one attack the one that can attack me;
+        for (int i: getAttactableEnemies(gameState, myPlayerIndex)) {
+            PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+            PlayerState enemy = gameState.getPlayerStateByIndex(i);
+            if (Utility.chebyshevDistance(enemy.getPosition(), myPlayer.getPosition()) > enemy.getStatSet().getRange()) {
+                return i;
+            }
+        }
+
+        //If cannot kill one attack the one with most damage;
+        int result = 0;
+        int damage = 0;
+        for (int i: getAttactableEnemies(gameState, myPlayerIndex)) {
+            PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+            PlayerState enemy = gameState.getPlayerStateByIndex(i);
+            if (enemy.getStatSet().getDamage() > damage) {
+                damage = enemy.getStatSet().getDamage();
+                result = i;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -48,7 +81,19 @@ public class NewStrategy implements Strategy {
         return null;
     }
 
-    public void updateState(GameState gameState, int myPlayerIndex) {
+    private ArrayList<Integer> getAttactableEnemies(GameState gameState, int myPlayerIndex) {
+        List<Integer> ints = Arrays.asList(new Integer[]{0, 1, 2, 3});
+        ints.remove(myPlayerIndex);
+        for(Integer i: ints) {
+            PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+            PlayerState enemy = gameState.getPlayerStateByIndex(i);
+            if (Utility.chebyshevDistance(enemy.getPosition(), myPlayer.getPosition()) > myPlayer.getStatSet().getRange()) {
+                ints.remove(i);
+            }
+        }
+        return (ArrayList<Integer>) ints;
+    }
+    private void updateState(GameState gameState, int myPlayerIndex) {
 
     }
 
