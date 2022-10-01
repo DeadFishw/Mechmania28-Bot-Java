@@ -133,7 +133,7 @@ public class NewStrategy implements Strategy {
     }
 
     private ArrayList<Integer> getAttactableEnemies(GameState gameState, int myPlayerIndex) {
-        List<Integer> ints = Arrays.asList(new Integer[]{0, 1, 2, 3});
+        List<Integer> ints = new ArrayList<>(Arrays.asList(new Integer[]{0, 1, 2, 3}));
         ints.remove(myPlayerIndex);
         for(Integer i: ints) {
             PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
