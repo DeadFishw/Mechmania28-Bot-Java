@@ -45,21 +45,80 @@ public class NewStrategy implements Strategy {
         }
 
         //If can kill one then kill one
+        List<Integer> killList = new ArrayList<>();
         for (int i: getAttactableEnemies(gameState, myPlayerIndex)) {
             PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
             PlayerState enemy = gameState.getPlayerStateByIndex(i);
-            if (myPlayer.getStatSet().getDamage() > enemy.getStatSet().getMaxHealth()) {
-                return i;
+            if (myPlayer.getStatSet().getDamage() > enemy.getHealth()) {
+                killList.add(i);
             }
+        }
+        //if there are multiple killables kill the one that has most threat;
+        if (!killList.isEmpty()) {
+            int damage = 0;
+            int indexToKill = killList.get(0);
+            for (int i: killList) {
+                PlayerState enemy = gameState.getPlayerStateByIndex(i);
+                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
+                    if (damage < enemy.getStatSet().getDamage()) {
+                        damage = enemy.getStatSet().getDamage();
+                        indexToKill = i;
+                    }
+                }
+            }
+            return indexToKill;
+        }
+
+        //If cannot kill attack the one on control tile
+        List<Integer> onTileList = new ArrayList<>();
+        for (int i: getAttactableEnemies(gameState, myPlayerIndex)) {
+            PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+            PlayerState enemy = gameState.getPlayerStateByIndex(i);
+            if (checkOnTile(gameState, i)) {
+                onTileList.add(i);
+            }
+        }
+        //If there are multiple on tile kill the one that has the most threat;
+        if (!onTileList.isEmpty()) {
+            int damage = 0;
+            int indexToKill = onTileList.get(0);
+            for (int i: onTileList) {
+                PlayerState enemy = gameState.getPlayerStateByIndex(i);
+                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
+                    if (damage < enemy.getStatSet().getDamage()) {
+                        damage = enemy.getStatSet().getDamage();
+                        indexToKill = i;
+                    }
+                }
+            }
+            return indexToKill;
         }
 
         //If cannot kill one attack the one that can attack me;
+        List<Integer> attackList = new ArrayList<>();
         for (int i: getAttactableEnemies(gameState, myPlayerIndex)) {
             PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
             PlayerState enemy = gameState.getPlayerStateByIndex(i);
             if (Utility.chebyshevDistance(enemy.getPosition(), myPlayer.getPosition()) > enemy.getStatSet().getRange()) {
-                return i;
+                attackList.add(i);
             }
+        }
+        if (!attackList.isEmpty()) {
+            int damage = 0;
+            int indexToKill = attackList.get(0);
+            for (int i: attackList) {
+                PlayerState enemy = gameState.getPlayerStateByIndex(i);
+                PlayerState myPlayer = gameState.getPlayerStateByIndex(myPlayerIndex);
+                if (Utility.manhattanDistance(enemy.getPosition(), myPlayer.getPosition()) <= enemy.getStatSet().getRange()) {
+                    if (damage < enemy.getStatSet().getDamage()) {
+                        damage = enemy.getStatSet().getDamage();
+                        indexToKill = i;
+                    }
+                }
+            }
+            return indexToKill;
         }
 
         //If cannot kill one attack the one with most damage;
@@ -74,6 +133,15 @@ public class NewStrategy implements Strategy {
             }
         }
         return result;
+    }
+
+    private boolean checkOnTile(GameState gameState, int index){
+        Position myPosition = gameState.getPlayerStateByIndex(index).getPosition();
+        if(myPosition.getX()<=5 && myPosition.getX()>=4 && myPosition.getY()<=5 && myPosition.getY()>=4){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     @Override
